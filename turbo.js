@@ -2,6 +2,8 @@ import dotenv from "dotenv";
 import { marked } from "marked";
 import { Configuration, OpenAIApi } from "openai";
 import { Telegraf } from "telegraf";
+import { message } from 'telegraf/filters';
+import process from "node:process";
 
 dotenv.config();
 
@@ -76,17 +78,12 @@ async function editRequest(prompt) {
 
   return fix;
 }
-
-bot.command("ask", async (ctx) => {
+async function text(ctx, question) {
   const userId = ctx.update.message.from.id;
 
   if (ctx.update.message.from.is_bot) {
     return false;
   }
-
-  const args = ctx.update.message.text.split(" ");
-  args.shift();
-  let question = args.join(" ");
 
   if (question.length == 0) {
     return ctx.reply("Type something after /ask to ask me stuff.", {
@@ -106,6 +103,12 @@ bot.command("ask", async (ctx) => {
   } catch (error) {
     console.log(error);
   }
+}
+bot.command("ask", async (ctx) => {
+  const args = ctx.update.message.text.split(" ");
+  args.shift();
+  let question = args.join(" ");
+  return await text(ctx, question);
 });
 
 bot.command("image", async (ctx) => {
@@ -174,6 +177,7 @@ bot.command("reload", async (ctx) => {
     });
   }
 });
+bot.on(message("text"), async(ctx) => {if (ctx.update.message.text[0]=='/') return false;return await text(ctx, ctx.update.message.text)});
 
 bot.launch();
 
